@@ -1,0 +1,92 @@
+Ako vec bude neki ip konfigurisan prvo skenirat online domenu a onda konfigurisat za lokalnog ovako (OBAVEZNO)
+
+sudo ip addr flush dev eth0- brise staru ip adresu i onda sudo ip addr add
+
+Na windows vm u cmd ukucati ipconfig vidjeti ip adresu npr.
+
+ IPv4 Address: 192.168.56.101
+
+Subnet Mask: 255.255.255.0
+
+ i onda na linuxu kucat
+
+sudo ip addr add 192.168.56.100/24 dev eth0
+
+sudo ip link set eth0 up
+
+
+ping 192.168.56.101
+
+nmap -p 1-6000 192.168.56.101 – svi portovi
+
+nmap -sC -sV -O -p  22,80,445 192.168.56.101 – defaultne skripte, verzije servisa
+
+Ako ima:
+
+Nmap –script ftp-anon -p 21 192.168.56.101 istestirati svaki otvoreni port da vidimo koji pruzaju sigurnosni rizik preko anonymous ftp allowed
+
+Nmap –script ssh2-enum-algos -p 22 192.168.56.101 detektovanje zastarjelih kriptografksih algoritama na ssh servisu
+
+enum4linux -a 192.168.56.101 - SMB
+
+Ako ima 80 ili 443 whatweb http://192.168.56.101
+
+Nikto -h http://192.168.56.101
+
+445 - enum4linux 192.168.56.101
+
+Searchsploit servis verzija
+
+SSH – 22 – pazit na protokole
+
+HTTP – 80
+
+HTTPS – 443
+
+SMB – 445 – signing iskljucen ne smije a ima puno propusta, star win server
+
+RDP – 3389 – ne smije bit remote desktop aktivan
+
+
+
+Za online domenu:
+
+Ako ne bude prvobitne ip adrese treba konfigurisat gateway: ip route add default via 192.168.56.1
+
+echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
+
+Whois domain.com – vlasnik, registar, datumi, nameserveri
+
+Nslookup domain.com – dobija se ip adresa i DNS server
+
+Curl -I https://domain.com – HTTP zaglavlja
+
+Whatweb domain ili curl domain.com | head – tehnologije
+
+Openssl s_client -connect domain.com:443 – SSL certifikat
+
+Curl https://example.com/robots.txt - ako postoji admin, backup, private 
+
+
+
+21 FTP nmap --script ftp-anon -p 21 <target>
+
+22 SSH nmap --script ssh-auth-methods -p 22 <target>
+
+23 Telnet nmap -p 23 <target> (open = vulnerable)
+
+25 SMTP nmap --script smtp-open-relay -p 25 <target>
+
+53 DNS nmap --script dns-zone-transfer -p 53 <target>
+
+80 HTTP nikto -h http://<target>
+
+443 HTTPS nmap --script ssl-heartbleed -p 443 <t-arget>
+
+445 SMB nmap --script smb-vuln* -p 445 <target>
+
+3306 MySQL nmap --script mysql-empty-password -p 3306 <target>
+
+3389 RDP nmap --script rdp-vuln* -p 3389 <target>
+
+5900 VNC nmap --script vnc-info -p 5900 <target>
