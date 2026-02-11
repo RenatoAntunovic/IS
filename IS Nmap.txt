@@ -90,3 +90,26 @@ Curl https://example.com/robots.txt - ako postoji admin, backup, private
 3389 RDP nmap --script rdp-vuln* -p 3389 <target>
 
 5900 VNC nmap --script vnc-info -p 5900 <target>
+
+dig unmo.ba mx - daje infoooo
+
+python3 cve_scan1.py <target>
+
+sudo systemctl status NetworkManager
+sudo systemctl stop NetworkManager
+sudo systemctl start NetworkManager
+
+u slucaju da nemamo nikakvog pocetnog interneta na linux masini a hocemo koristiti dig i skidati CVE skenere moramo ici
+sudo systemctl start NetworkManager
+sudo dhclient eth0 - dodjeljuje sam sve
+
+mkdir INDEX
+cd INDEX
+touch file.txt
+echo "tekst" > file.txt
+chmod 700 .
+chmod 600 file.txt
+ls -l
+
+🔹 Internet = DHCP + NetworkManager ON
+🔹 Meta = Private switch + NetworkManager OFF + ručni IP
